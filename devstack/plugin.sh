@@ -31,7 +31,7 @@ function install_docker {
     else
         exit_distro_not_supported
     fi
- 
+
     sudo systemctl start docker
 }
 
@@ -120,7 +120,8 @@ EOF'
 function install_master {
     sed -i "s#KEYSTONE_HOST#${SERVICE_HOST}#g" ${STACKUBE_ROOT}/kubeadm.yaml
     sed -i "s#CLUSTER_CIDR#${CLUSTER_CIDR}#g" ${STACKUBE_ROOT}/kubeadm.yaml
-    sudo kubeadm init --config ${STACKUBE_ROOT}/kubeadm.yaml
+    sudo swapoff -a && sudo sysctl -w vm.swappiness=0
+    sudo kubeadm init --config ${STACKUBE_ROOT}/kubeadm.yaml --skip-preflight-checks
     # Enable schedule pods on the master for testing.
     sudo cp /etc/kubernetes/admin.conf $HOME/
     sudo chown $(id -u):$(id -g) $HOME/admin.conf
@@ -158,7 +159,7 @@ data:
   user-gateway: "${CLUSTER_GATEWAY}"
   kubernetes-host: "${SERVICE_HOST}"
   kubernetes-port: "6443"
-  keyring: "${keyring}" 
+  keyring: "${keyring}"
 EOF
     kubectl create -f stackube-configmap.yaml
     kubectl create -f ${STACKUBE_ROOT}/../deployment/stackube.yaml
